@@ -60,8 +60,10 @@
         this.searchResults = "Loading...";
         this.getJsonData().then((data) => {
           this.data = data;
-          let result = jsonata(this.jsonataQuery).evaluate(this.data);
+          let result = data;
 
+          if (this.jsonataQuery !== "")
+            result = jsonata(this.jsonataQuery).evaluate(this.data);
           if (result != null) {
             this.searchResults = syntaxHighlight(
               JSON.stringify(result, null, "\t"),
