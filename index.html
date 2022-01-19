@@ -1,50 +1,44 @@
 <html>
-  <head>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css"
-    />
-    <script
-      defer
-      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
-    ></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsonata/jsonata.min.js"></script>
-  </head>
-  <body>
-    <main class="container">
-      <div x-data="apiResultHiLighter()">
-        <div>
-          <label for="apiUrl">
-            Api Url
-            <input x-model="apiUrl" name="apiUrl" type="text" />
-          </label>
-          <label for="jsonataQuery">
-            JSONata Query (<a href="https://jsonata.org/">link </a>)
-            <input x-model="jsonataQuery" name="jsonataQuery" type="text" />
-          </label>
-          <label for="hightlightTerm">
-            Highlight
-            <input x-model="hightlightTerm" name="hightlightTerm" type="text" />
-          </label>
 
-          <button
-            type="button"
-            @click="executeApiHilight()"
-            :aria-busy="isLoading"
-          >
-            Search
-          </button>
-        </div>
+<head>
+  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsonata/jsonata.min.js"></script>
+  <style>
+    article {
+      border: 1px solid #333;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <div x-data="apiResultHiLighter()">
+      <article>
+        <label for="apiUrl">
+          Api Url
+          <input x-model="apiUrl" name="apiUrl" type="text" />
+        </label>
+        <label for="jsonataQuery">
+          JSONata Query (<a href="https://jsonata.org/">link </a>)
+          <input x-model="jsonataQuery" name="jsonataQuery" type="text" />
+        </label>
+        <label for="hightlightTerm">
+          Highlight
+          <input x-model="hightlightTerm" name="hightlightTerm" type="text" />
+        </label>
+
+        <button type="button" @click="executeApiHilight()" :aria-busy="isLoading">
+          Search
+        </button>
         <template x-if="data">
-          <div
-            id="tree-result"
-            style="font-family: monospace; white-space: pre"
-            x-html="searchResults"
-          ></div>
+          <div id="tree-result" style="font-family: monospace; white-space: pre" x-html="searchResults"></div>
         </template>
-      </div>
-    </main>
-  </body>
+        </ar>
+    </div>
+  </main>
+</body>
+
 </html>
 <script>
   function apiResultHiLighter() {
@@ -79,11 +73,11 @@
       async getJsonData() {
         try {
           let response = await fetch(this.apiUrl);
+          return await response.json();
+        } catch (err) {
           console.log(
             `Something went wrong: ${response.status} - ${response.statusText}`
           );
-          return await response.json();
-        } catch (err) {
           alert(err); // TypeError: failed to fetch
           return { error: err };
         }
@@ -128,18 +122,23 @@
     padding: 5px;
     margin: 5px;
   }
+
   .string {
     color: green;
   }
+
   .number {
     color: darkorange;
   }
+
   .boolean {
     color: blue;
   }
+
   .null {
     color: magenta;
   }
+
   .key {
     color: brown;
   }
