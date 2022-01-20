@@ -9,10 +9,15 @@
     article {
       border: 1px solid #333;
     }
+
+    .debug {
+      border: 1px red solid
+    }
   </style>
 </head>
+
 <body>
-  <main class="container">
+  <div class="container-fluid">
     <div x-data="apiResultHiLighter()">
       <article>
         <label for="apiUrl">
@@ -33,37 +38,47 @@
         <button type="button" @click="fetchApiData()" :aria-busy="isLoading">
           Get Data
         </button>
-
-        <div class="grid">
-          <div>       
-            <label for="hightlightTerm">
-            Select Highlight Term
-            <select x-model="selectedHighlightTerm">
-              <option value="" disabled>Select...</option>
-              <template x-for="term in highlightTerms">
-                  <option x-text="term"></option>
-              </template>         
-            </select>
-            </label>
-          </div>
-          <div>       
-            <label for="hightlightTerm">
-            Custom Highlight
-            <input x-model="customHightlightTerm" name="customHightlightTerm" type="text" />
-            </label>
-          </div>          
-        </div>
-
-        <button type="button" @click="highlightAllTerms()">
-          Search Data
-        </button>
-
         <template x-if="data">
-          <div id="tree-result" style="font-family: monospace; white-space: pre; height: 50vh; overflow: scroll;" x-html="searchResults"></div>
+          <div>
+            <div class="grid">
+              <div>
+                <label for="hightlightTerm">
+                  Select Highlight Term
+                  <select x-model="selectedHighlightTerm">
+                    <option value="" disabled>Select...</option>
+                    <template x-for="term in highlightTerms">
+                      <option x-text="term"></option>
+                    </template>
+                  </select>
+                </label>
+              </div>
+              <div>
+                <label for="hightlightTerm">
+                  Custom Highlight
+                  <input x-model="customHightlightTerm" name="customHightlightTerm" type="text" />
+                </label>
+              </div>
+            </div>
+
+            <div class="grid">
+              <button type="button"
+                @click="highlightAllTerms(); $nextTick( () =>  document.getElementsByClassName('marked')[0].scrollIntoView({ behavior: 'smooth' }))">
+                Search Data
+              </button>
+              <button type="button" @click="findNext()">
+                Next
+              </button>
+              <button type="button" @click="findPrevious()">
+                Previous
+              </button>
+            </div>
+            <div id="tree-result" style="font-family: monospace; white-space: pre; height: 50vh; overflow: scroll;"
+              x-html="searchResults"></div>
+          </div>
         </template>
         </ar>
     </div>
-  </main>
+  </div>
 </body>
 
 </html>
@@ -78,13 +93,15 @@
       selectedHighlightTerm: "",
       hightlightTerm: "",
       customHightlightTerm: "",
+      maxMarked: 0,
+      currentMarked: 0,
       searchResults: "N/A",
       isLoading: false,
       fetchApiData() {
         this.isLoading = true;
         this.searchResults = "Loading...";
-        this.selectedHighlightTerm="";
-        
+        this.selectedHighlightTerm = "";
+
         this.getJsonData().then((data) => {
           this.data = data;
           let result = data;
@@ -94,7 +111,7 @@
 
           if (this.jsonataQueryForHighlightTerms !== "")
             this.highlightTerms = jsonata(this.jsonataQueryForHighlightTerms).evaluate(this.data);
-                        
+
           if (result != null) {
             this.searchResults = syntaxHighlight(
               JSON.stringify(result, null, "\t"),
@@ -107,18 +124,30 @@
           this.isLoading = false;
         });
       },
-      highlightAllTerms(){
-        if(this.data === '') return;
-        let result="";
-        if (this.jsonataQuery !== "")
-            result = jsonata(this.jsonataQuery).evaluate(this.data);
+      highlightAllTerms() {
+        if (this.data == null) return;
 
-          if (this.jsonataQueryForHighlightTerms !== "")
-            this.highlightTerms = jsonata(this.jsonataQueryForHighlightTerms).evaluate(this.data);
+        this.maxMarked = 0;
+        this.currentMarked = 0;
+        let result = "";
+        if (this.jsonataQuery !== "")
+          result = jsonata(this.jsonataQuery).evaluate(this.data);
+
+        if (this.jsonataQueryForHighlightTerms !== "")
+          this.highlightTerms = jsonata(this.jsonataQueryForHighlightTerms).evaluate(this.data);
 
         this.searchResults = syntaxHighlight(
-              JSON.stringify(result, null, "\t"),
-              this.selectedHighlightTerm === "" ? "zzzz" : this.selectedHighlightTerm);
+          JSON.stringify(result, null, "\t"),
+          this.selectedHighlightTerm === "" ? "zzzz" : this.selectedHighlightTerm);
+      },
+      findNext() {
+        this.maxMarked = document.getElementsByClassName('marked').length;
+        if (this.currentMarked + 1 < this.maxMarked) this.currentMarked = this.currentMarked + 1;
+        document.getElementsByClassName('marked')[this.currentMarked].scrollIntoView({ behavior: 'smooth' })
+      },
+      findPrevious() {
+        if (this.currentMarked - 1 >= 0) this.currentMarked = this.currentMarked - 1;
+        document.getElementsByClassName('marked')[this.currentMarked].scrollIntoView({ behavior: 'smooth' })
       },
       async getJsonData() {
         try {
@@ -158,7 +187,7 @@
         let ret = '<span class="' + cls + '">' + match + "</span>";
         ret = ret.replaceAll(
           new RegExp(hilite, "gi"),
-          "<mark>" + hilite + "</mark>"
+          "<mark class='marked'>" + hilite + "</mark>"
         );
         return ret;
       }
@@ -174,11 +203,11 @@
   }
 
   .string {
-    color: green;
+    color: aqua;
   }
 
   .number {
-    color: darkorange;
+    color: gold;
   }
 
   .boolean {
@@ -190,6 +219,6 @@
   }
 
   .key {
-    color: brown;
+    color: coral;
   }
 </style>
