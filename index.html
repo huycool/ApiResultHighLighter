@@ -1,6 +1,7 @@
 <html>
 
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsonata/jsonata.min.js"></script>
@@ -10,7 +11,6 @@
     }
   </style>
 </head>
-
 <body>
   <main class="container">
     <div x-data="apiResultHiLighter()">
@@ -19,20 +19,47 @@
           Api Url
           <input x-model="apiUrl" name="apiUrl" type="text" />
         </label>
+
         <label for="jsonataQuery">
           JSONata Query (<a href="https://jsonata.org/">link</a>)
           <input x-model="jsonataQuery" name="jsonataQuery" type="text" />
         </label>
-        <label for="hightlightTerm">
-          Highlight
-          <input x-model="hightlightTerm" name="hightlightTerm" type="text" />
+
+        <label for="jsonataQuery">
+          JSONata Query For Highlighting Terms
+          <input x-model="jsonataQueryForHighlightTerms" name="jsonataQueryForHighlightTerms" type="text" />
         </label>
 
-        <button type="button" @click="executeApiHilight()" :aria-busy="isLoading">
-          Search
+        <button type="button" @click="fetchApiData()" :aria-busy="isLoading">
+          Get Data
         </button>
+
+        <div class="grid">
+          <div>       
+            <label for="hightlightTerm">
+            Select Highlight Term
+            <select x-model="selectedHighlightTerm">
+              <option value="" disabled>Select...</option>
+              <template x-for="term in highlightTerms">
+                  <option x-text="term"></option>
+              </template>         
+            </select>
+            </label>
+          </div>
+          <div>       
+            <label for="hightlightTerm">
+            Custom Highlight
+            <input x-model="customHightlightTerm" name="customHightlightTerm" type="text" />
+            </label>
+          </div>          
+        </div>
+
+        <button type="button" @click="highlightAllTerms()">
+          Search Data
+        </button>
+
         <template x-if="data">
-          <div id="tree-result" style="font-family: monospace; white-space: pre" x-html="searchResults"></div>
+          <div id="tree-result" style="font-family: monospace; white-space: pre; height: 50vh; overflow: scroll;" x-html="searchResults"></div>
         </template>
         </ar>
     </div>
@@ -46,18 +73,28 @@
       data: null,
       apiUrl: "https://api.warframestat.us/pc",
       jsonataQuery: "syndicateMissions.jobs",
+      jsonataQueryForHighlightTerms: "syndicateMissions.jobs.rewardPool",
+      highlightTerms: [],
+      selectedHighlightTerm: "",
       hightlightTerm: "",
+      customHightlightTerm: "",
       searchResults: "N/A",
       isLoading: false,
-      executeApiHilight() {
+      fetchApiData() {
         this.isLoading = true;
         this.searchResults = "Loading...";
+        this.selectedHighlightTerm="";
+        
         this.getJsonData().then((data) => {
           this.data = data;
           let result = data;
 
           if (this.jsonataQuery !== "")
             result = jsonata(this.jsonataQuery).evaluate(this.data);
+
+          if (this.jsonataQueryForHighlightTerms !== "")
+            this.highlightTerms = jsonata(this.jsonataQueryForHighlightTerms).evaluate(this.data);
+                        
           if (result != null) {
             this.searchResults = syntaxHighlight(
               JSON.stringify(result, null, "\t"),
@@ -69,6 +106,19 @@
 
           this.isLoading = false;
         });
+      },
+      highlightAllTerms(){
+        if(this.data === '') return;
+        let result="";
+        if (this.jsonataQuery !== "")
+            result = jsonata(this.jsonataQuery).evaluate(this.data);
+
+          if (this.jsonataQueryForHighlightTerms !== "")
+            this.highlightTerms = jsonata(this.jsonataQueryForHighlightTerms).evaluate(this.data);
+
+        this.searchResults = syntaxHighlight(
+              JSON.stringify(result, null, "\t"),
+              this.selectedHighlightTerm === "" ? "zzzz" : this.selectedHighlightTerm);
       },
       async getJsonData() {
         try {
