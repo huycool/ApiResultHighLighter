@@ -60,18 +60,23 @@
               </div>
             </div>
 
-            <div class="grid">
-              <button type="button"
-                @click="highlightAllTerms(); $nextTick( () =>  document.getElementsByClassName('marked')[0].scrollIntoView({ behavior: 'smooth' }))">
+              <button type="button" @click="highlightAllTerms(); 
+                $nextTick( () => { 
+                  document.getElementsByClassName('marked')[0].scrollIntoView({ behavior: 'smooth' });
+                  maxMarked = document.getElementsByClassName('marked').length;
+                })">
                 Search Data
               </button>
-              <button type="button" @click="findNext()">
-                Next
-              </button>
-              <button type="button" @click="findPrevious()">
-                Previous
-              </button>
-            </div>
+              <template x-if="maxMarked > 0">
+                <div class="grid">
+                  <button type="button" @click="findNext()">
+                    Next
+                  </button>
+                  <button type="button" @click="findPrevious()">
+                    Previous
+                  </button>
+                </div>
+              </template>
             <div id="tree-result" style="font-family: monospace; white-space: pre; height: 50vh; overflow: scroll;"
               x-html="searchResults"></div>
           </div>
@@ -141,11 +146,29 @@
           this.selectedHighlightTerm === "" ? "zzzz" : this.selectedHighlightTerm);
       },
       findNext() {
-        this.maxMarked = document.getElementsByClassName('marked').length;
+        const marked = document.getElementsByClassName('marked');
+        this.maxMarked = marked.length;
+        for (let index = 0; index < marked.length; index++) {
+          const element = marked[index];
+          console.log(isScrolledIntoView(element) + ":" + index);
+          if (isScrolledIntoView(element)) {
+            this.currentMarked = index;
+          }
+        }
         if (this.currentMarked + 1 < this.maxMarked) this.currentMarked = this.currentMarked + 1;
-        document.getElementsByClassName('marked')[this.currentMarked].scrollIntoView({ behavior: 'smooth' })
+        marked[this.currentMarked].scrollIntoView({ behavior: 'smooth' })
       },
       findPrevious() {
+        const marked = document.getElementsByClassName('marked');
+        this.maxMarked = marked.length;
+        for (let index = 0; index < marked.length; index++) {
+          const element = marked[index];
+          console.log(isScrolledIntoView(element) + ":" + index);
+          if (isScrolledIntoView(element)) {
+            this.currentMarked = index;
+            break;
+          }
+        }
         if (this.currentMarked - 1 >= 0) this.currentMarked = this.currentMarked - 1;
         document.getElementsByClassName('marked')[this.currentMarked].scrollIntoView({ behavior: 'smooth' })
       },
@@ -164,7 +187,7 @@
     };
   }
 
-  function syntaxHighlight(json, hilite) {
+  const syntaxHighlight = function (json, hilite) {
     json = json
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -192,6 +215,18 @@
         return ret;
       }
     );
+  }
+
+  //https://javascript.plainenglish.io/how-to-check-if-an-element-is-visible-after-scrolling-b05afe1d756d
+  const isScrolledIntoView = (el) => {
+    const {
+      top,
+      bottom
+    } = el.getBoundingClientRect();
+    const elemTop = top;
+    const elemBottom = bottom;
+    const isVisible = (elemTop >= 0) && (elemBottom <= window.innerHeight);
+    return isVisible;
   }
 </script>
 
