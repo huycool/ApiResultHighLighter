@@ -60,23 +60,23 @@
               </div>
             </div>
 
-              <button type="button" @click="highlightAllTerms(); 
+            <button type="button" @click="highlightAllTerms(); 
                 $nextTick( () => { 
                   document.getElementsByClassName('marked')[0].scrollIntoView({ behavior: 'smooth' });
                   maxMarked = document.getElementsByClassName('marked').length;
                 })">
-                Search Data
-              </button>
-              <template x-if="maxMarked > 0">
-                <div class="grid">
-                  <button type="button" @click="findNext()">
-                    Next
-                  </button>
-                  <button type="button" @click="findPrevious()">
-                    Previous
-                  </button>
-                </div>
-              </template>
+              Search Data
+            </button>
+            <template x-if="maxMarked > 0">
+              <div class="grid">
+                <button type="button" @click="findNext()">
+                  Next
+                </button>
+                <button type="button" @click="findPrevious()">
+                  Previous
+                </button>
+              </div>
+            </template>
             <div id="tree-result" style="font-family: monospace; white-space: pre; height: 50vh; overflow: scroll;"
               x-html="searchResults"></div>
           </div>
@@ -106,6 +106,8 @@
         this.isLoading = true;
         this.searchResults = "Loading...";
         this.selectedHighlightTerm = "";
+        this.maxMarked = 0;
+        this.data=null;
 
         this.getJsonData().then((data) => {
           this.data = data;
