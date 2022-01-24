@@ -107,7 +107,7 @@
         this.searchResults = "Loading...";
         this.selectedHighlightTerm = "";
         this.maxMarked = 0;
-        this.data=null;
+        this.data = null;
 
         this.getJsonData().then((data) => {
           this.data = data;
@@ -118,11 +118,13 @@
 
           if (this.jsonataQueryForHighlightTerms !== "")
             this.highlightTerms = jsonata(this.jsonataQueryForHighlightTerms).evaluate(this.data);
+          
+          this.searchResults = JSON.stringify(data);
 
           if (result != null) {
             this.searchResults = syntaxHighlight(
               JSON.stringify(result, null, "\t"),
-              this.hightlightTerm === "" ? "zzzz" : this.hightlightTerm
+              "zzzz"
             );
           } else {
             this.searchResults = JSON.stringify(data);
@@ -143,16 +145,18 @@
         if (this.jsonataQueryForHighlightTerms !== "")
           this.highlightTerms = jsonata(this.jsonataQueryForHighlightTerms).evaluate(this.data);
 
+        let termToUse = (this.customHightlightTerm == '') ? this.selectedHighlightTerm : this.customHightlightTerm;
+
         this.searchResults = syntaxHighlight(
           JSON.stringify(result, null, "\t"),
-          this.selectedHighlightTerm === "" ? "zzzz" : this.selectedHighlightTerm);
+          termToUse === "" ? "zzzz" : termToUse);
+
       },
       findNext() {
         const marked = document.getElementsByClassName('marked');
         this.maxMarked = marked.length;
         for (let index = 0; index < marked.length; index++) {
           const element = marked[index];
-          console.log(isScrolledIntoView(element) + ":" + index);
           if (isScrolledIntoView(element)) {
             this.currentMarked = index;
           }
@@ -165,7 +169,6 @@
         this.maxMarked = marked.length;
         for (let index = 0; index < marked.length; index++) {
           const element = marked[index];
-          console.log(isScrolledIntoView(element) + ":" + index);
           if (isScrolledIntoView(element)) {
             this.currentMarked = index;
             break;
